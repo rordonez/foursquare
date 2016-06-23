@@ -13,19 +13,23 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.client.RestOperations;
 import rafael.ordonez.FoursquareApplication;
+import rafael.ordonez.foursquare.api.venues.Group;
+import rafael.ordonez.foursquare.api.venues.Item;
+import rafael.ordonez.foursquare.api.venues.Venue;
 import rafael.ordonez.foursquare.api.venues.VenuesExploreResponse;
 
+import java.util.Arrays;
 import java.util.Map;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.hasSize;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Mockito.*;
 import static org.mockito.junit.MockitoJUnit.rule;
 import static org.springframework.http.MediaType.APPLICATION_JSON_UTF8;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.standaloneSetup;
 
 /**
@@ -89,5 +93,40 @@ public class PlacesControllerTest {
         assertTrue(paramsMap.getValue().containsKey("near"));
     }
 
+    @Test
+    public void shouldReturnAModelWithNameUrlAndRating() throws Exception {
+        when(template.getForObject(anyString(), any(), anyMap())).thenReturn(twoPlaces());
+        String placeName = "somewhere";
 
+        mockMvc.perform(get("/places/{name}", placeName))
+                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$[0].name", is("Place 1")))
+                .andExpect(jsonPath("$[0].url", is("http://example1.com")))
+                .andExpect(jsonPath("$[0].rating", is(1.0)))
+                .andExpect(jsonPath("$[1].name", is("Place 2")))
+                .andExpect(jsonPath("$[1].url", is("http://example2.com")))
+                .andExpect(jsonPath("$[1].rating", is(2.0)));
+    }
+
+    private VenuesExploreResponse twoPlaces() {
+        VenuesExploreResponse response = new VenuesExploreResponse();
+        Group group = new Group();
+        group.setItems(Arrays.asList(mockItem(mockVenue(1)),  mockItem(mockVenue(2))));
+        response.setGroups(Arrays.asList(group));
+        return response;
+    }
+
+    private Item mockItem(Venue venue) {
+        Item item = new Item();
+        item.setVenue(venue);
+        return item;
+    }
+
+    private Venue mockVenue(int id) {
+        Venue venue = new Venue();
+        venue.setName("Place " + id);
+        venue.setUrl("http://example" + id + ".com");
+        venue.setRating((double)id);
+        return venue;
+    }
 }
