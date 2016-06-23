@@ -1,6 +1,7 @@
 package rafael.ordonez.places;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -24,6 +25,15 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 @RequestMapping("/places")
 public class PlacesController {
 
+    @Value("${clientId}")
+    private String clientId;
+
+    @Value("${clientSecret}")
+    private String clientSecret;
+
+    @Value("${version}")
+    private String version;
+
     private RestOperations template;
 
     @Autowired
@@ -33,7 +43,7 @@ public class PlacesController {
 
     @RequestMapping(method = GET, value = "/{name}", produces = {APPLICATION_JSON_UTF8_VALUE})
     public ResponseEntity<VenuesExploreResponse> getPlacesBy(@PathVariable String name) {
-        return new ResponseEntity<>(template.getForObject("https://api.foursquare.com/v2/venues/explore", VenuesExploreResponse.class, getQueryParams(name)), getHttpHeaders(), HttpStatus.OK);
+        return new ResponseEntity<>(template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&v={v}&near={near}", VenuesExploreResponse.class, getQueryParams(name)), getHttpHeaders(), HttpStatus.OK);
     }
 
     private HttpHeaders getHttpHeaders() {
@@ -44,9 +54,9 @@ public class PlacesController {
 
     private Map<String, Object> getQueryParams(String name) {
         Map<String, Object> params = new HashMap<>();
-        params.put("client_id", "");
-        params.put("client_secret", "");
-        params.put("v", "");
+        params.put("client_id", clientId);
+        params.put("client_secret", clientSecret);
+        params.put("v", version);
         params.put("near", name);
         return params;
     }
