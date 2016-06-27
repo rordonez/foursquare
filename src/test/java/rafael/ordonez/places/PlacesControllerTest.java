@@ -10,11 +10,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoRule;
 import org.springframework.boot.test.SpringApplicationConfiguration;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import rafael.ordonez.FoursquareApplication;
+import rafael.ordonez.errors.ErrorHandler;
 
 import java.util.Arrays;
 import java.util.List;
@@ -59,7 +61,9 @@ public class PlacesControllerTest {
 
     @Before
     public void setUp() throws Exception {
-        mockMvc = standaloneSetup(placeController).build();
+        mockMvc = standaloneSetup(placeController)
+                .setControllerAdvice(new ErrorHandler())
+                .build();
     }
 
     @Test
@@ -97,6 +101,17 @@ public class PlacesControllerTest {
                 .andExpect(jsonPath("$[1].name", is("Place 2")))
                 .andExpect(jsonPath("$[1].url", is("http://example2.com")))
                 .andExpect(jsonPath("$[1].rating", is(2.0)));
+    }
+
+    @Test
+    public void shouldHandleErrorsInJson() throws Exception {
+        when(places.getPlaces(anyString())).thenThrow(new VenuesExploreException(HttpStatus.BAD_REQUEST, "Error returning data"));
+        String placeName = "somewhere";
+
+        mockMvc.perform(get("/places/{name}", placeName))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status", is(HttpStatus.BAD_REQUEST.value())))
+                .andExpect(jsonPath("$.message", is("Error returning data")));
     }
 
     private List<Place> create(int number) {
