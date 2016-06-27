@@ -6,6 +6,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoRule;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestOperations;
 import rafael.ordonez.foursquare.api.venues.*;
 
@@ -56,6 +58,18 @@ public class PlacesServiceTest {
         assertThat(places, hasSize(1));
     }
 
+    @Test(expected = VenuesExploreException.class)
+    public void shouldHandleAnyException() throws Exception {
+        String place = "any";
+        Mockito.when(operations.getForObject(anyString(), any(), anyMap())).thenThrow(clientException());
+
+        placesService.getPlaces(place);
+    }
+
+    private HttpClientErrorException clientException() {
+        return new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Error connecting to the service");
+    }
+
     private Response responseWithNoResults() {
         Response response = Mockito.mock(Response.class);
         VenuesExploreResponse venuesExploreResponse = Mockito.mock(VenuesExploreResponse.class);
@@ -75,5 +89,4 @@ public class PlacesServiceTest {
         Mockito.when(response.getResponse()).thenReturn(venuesExploreResponse);
         return response;
     }
-
 }

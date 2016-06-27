@@ -3,11 +3,11 @@ package rafael.ordonez.places;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestOperations;
 import rafael.ordonez.foursquare.api.venues.Group;
 import rafael.ordonez.foursquare.api.venues.Response;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,20 +34,26 @@ class PlacesServiceImpl implements PlacesService {
     }
 
     @Override
-    public List<Place> getPlaces(String name) {
-        Response response = template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&near={near}", Response.class, getQueryParams(name));
+    public List<Place> getPlaces(String place) {
+        Response response = exploreVenuesFor(place);
 
-        List<Place> places = new ArrayList<>();
-
-        if(!response.getResponse().getGroups().isEmpty()) {
-            places = response.getResponse().getGroups().stream()
+        return response.getResponse().getGroups().stream()
                     .map(Group::getItems)
                     .flatMap(List::stream)
                     .map(x -> x.getVenue())
                     .map(venue -> new Place(venue.getName(), venue.getUrl(), venue.getRating()))
                     .collect(Collectors.toList());
+    }
+
+    private Response exploreVenuesFor(String name) {
+        Response response;
+        try {
+            response = template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&near={near}", Response.class, getQueryParams(name));
         }
-        return places;
+        catch (HttpStatusCodeException e) {
+            throw new VenuesExploreException(e.getStatusCode(), e.getStatusText());
+        }
+        return response;
     }
 
     private Map<String, Object> getQueryParams(String name) {
