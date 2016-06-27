@@ -4,13 +4,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestOperations;
-import rafael.ordonez.foursquare.api.venues.Item;
+import rafael.ordonez.foursquare.api.venues.Group;
 import rafael.ordonez.foursquare.api.venues.Response;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 class PlacesServiceImpl implements PlacesService {
@@ -39,9 +40,12 @@ class PlacesServiceImpl implements PlacesService {
         List<Place> places = new ArrayList<>();
 
         if(!response.getResponse().getGroups().isEmpty()) {
-            for (Item item : response.getResponse().getGroups().get(0).getItems()) {
-                places.add(new Place(item.getVenue().getName(), item.getVenue().getUrl(), item.getVenue().getRating()));
-            }
+            places = response.getResponse().getGroups().stream()
+                    .map(Group::getItems)
+                    .flatMap(List::stream)
+                    .map(x -> x.getVenue())
+                    .map(venue -> new Place(venue.getName(), venue.getUrl(), venue.getRating()))
+                    .collect(Collectors.toList());
         }
         return places;
     }

@@ -7,11 +7,15 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoRule;
 import org.springframework.web.client.RestOperations;
-import rafael.ordonez.foursquare.api.venues.Response;
-import rafael.ordonez.foursquare.api.venues.VenuesExploreResponse;
+import rafael.ordonez.foursquare.api.venues.*;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.*;
 import static org.mockito.junit.MockitoJUnit.rule;
 
@@ -40,6 +44,18 @@ public class PlacesServiceTest {
         Mockito.verify(operations).getForObject(anyString(), any(), anyMap());
     }
 
+    @Test
+    public void shouldMapVenuesCorrectly() throws Exception {
+        String place = "any";
+        Response response = responseWithVenues();
+        Mockito.when(operations.getForObject(anyString(), any(), anyMap())).thenReturn(response);
+
+        List<Place> places = placesService.getPlaces(place);
+
+        assertThat(places, is(notNullValue()));
+        assertThat(places, hasSize(1));
+    }
+
     private Response responseWithNoResults() {
         Response response = Mockito.mock(Response.class);
         VenuesExploreResponse venuesExploreResponse = Mockito.mock(VenuesExploreResponse.class);
@@ -48,5 +64,16 @@ public class PlacesServiceTest {
         return response;
     }
 
+    private Response responseWithVenues() {
+        Response response = Mockito.mock(Response.class);
+        VenuesExploreResponse venuesExploreResponse = Mockito.mock(VenuesExploreResponse.class);
+        Group group = Mockito.mock(Group.class);
+        Item item = Mockito.mock(Item.class);
+        Mockito.when(item.getVenue()).thenReturn(new Venue());
+        Mockito.when(group.getItems()).thenReturn(Arrays.asList(item));
+        Mockito.when(venuesExploreResponse.getGroups()).thenReturn(Arrays.asList(group));
+        Mockito.when(response.getResponse()).thenReturn(venuesExploreResponse);
+        return response;
+    }
 
 }
