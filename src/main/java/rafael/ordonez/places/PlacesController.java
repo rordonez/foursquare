@@ -1,5 +1,7 @@
 package rafael.ordonez.places;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -20,6 +22,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 @RestController
 @RequestMapping("/places")
 public class PlacesController {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlacesController.class);
 
     private PlacesService places;
 
@@ -30,6 +33,7 @@ public class PlacesController {
 
     @RequestMapping(method = GET, value = "/{name}", produces = {APPLICATION_JSON_UTF8_VALUE})
     public ResponseEntity<List<Place>> getPlacesBy(@PathVariable String name) {
+        LOGGER.info("Getting recommended places for {}", name);
         return new ResponseEntity<>(places.getPlaces(name), getHttpHeaders(), HttpStatus.OK);
     }
 

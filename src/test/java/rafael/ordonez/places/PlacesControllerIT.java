@@ -34,6 +34,6 @@ public class PlacesControllerIT {
         when().
                 get("/places/{name}", place).
         then().
-                statusCode(HttpStatus.SC_OK);
+                    statusCode(HttpStatus.SC_OK);
     }
 }

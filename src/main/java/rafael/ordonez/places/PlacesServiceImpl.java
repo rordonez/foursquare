@@ -1,5 +1,7 @@
 package rafael.ordonez.places;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 
 @Component
 class PlacesServiceImpl implements PlacesService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlacesServiceImpl.class);
 
     @Value("${clientId}")
     private String clientId;
@@ -24,7 +27,6 @@ class PlacesServiceImpl implements PlacesService {
 
     @Value("${version}")
     private String version;
-
 
     private RestOperations template;
 
@@ -37,6 +39,10 @@ class PlacesServiceImpl implements PlacesService {
     public List<Place> getPlaces(String place) {
         Response response = exploreVenuesFor(place);
 
+        return extractPlacesFrom(response);
+    }
+
+    private List<Place> extractPlacesFrom(Response response) {
         return response.getResponse().getGroups().stream()
                     .map(Group::getItems)
                     .flatMap(List::stream)
@@ -48,9 +54,10 @@ class PlacesServiceImpl implements PlacesService {
     private Response exploreVenuesFor(String name) {
         Response response;
         try {
-            response = template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&near={near}", Response.class, getQueryParams(name));
+            response = template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&v={v}&near={near}", Response.class, getQueryParams(name));
         }
         catch (HttpStatusCodeException e) {
+            LOGGER.error("Received an error trying to explore venues from Foursquare API");
             throw new VenuesExploreException(e.getStatusCode(), e.getStatusText());
         }
         return response;

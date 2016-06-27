@@ -4,8 +4,6 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Captor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoRule;
@@ -20,7 +18,6 @@ import rafael.ordonez.errors.ErrorHandler;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -52,12 +49,6 @@ public class PlacesControllerTest {
 
     @Mock
     private PlacesService places;
-
-    @Captor
-    private ArgumentCaptor<Map<String, Object>> paramsMap;
-
-    @Captor
-    private ArgumentCaptor<String> url;
 
     @Before
     public void setUp() throws Exception {
