@@ -34,7 +34,7 @@ class PlacesServiceImpl implements PlacesService {
 
     @Override
     public List<Place> getPlaces(String name) {
-        Response response = template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&v={v}&near={near}", Response.class, getQueryParams(name));
+        Response response = template.getForObject("https://api.foursquare.com/v2/venues/explore?client_id={client_id}&client_secret={client_secret}&near={near}", Response.class, getQueryParams(name));
 
         List<Place> places = new ArrayList<>();
 
